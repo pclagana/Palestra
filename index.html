@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vela Gym">
+<meta name="theme-color" content="#0a0f1e">
+<title>Vela Gym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a0f1e;
+    --deep: #060b16;
+    --ocean: #0d2137;
+    --wave: #1a4a6e;
+    --sail: #e8dfc8;
+    --foam: #f5f0e8;
+    --accent: #00c9a7;
+    --warn: #f4a261;
+    --danger: #e76f51;
+    --dim: rgba(232,223,200,0.35);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body {
+    height: 100%; width: 100%;
+    background: var(--navy);
+    color: var(--sail);
+    font-family: 'DM Mono', monospace;
+    overflow: hidden;
+    user-select: none;
+  }
+  body {
+    display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .logo { font-family:'Bebas Neue'; font-size:26px; letter-spacing:3px; color:var(--accent); }
+  .day-pills { display:flex; gap:6px; }
+  .pill {
+    font-family:'Bebas Neue'; font-size:14px; letter-spacing:1px;
+    padding: 4px 10px; border-radius:20px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    color: var(--dim); cursor:pointer; transition:all .2s;
+  }
+  .pill.active {
+    border-color: var(--accent); color: var(--accent);
+    background: rgba(0,201,167,0.1);
+  }
+  .main {
+    flex:1; overflow-y:auto; overflow-x:hidden;
+    padding: 0 0 120px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .main::-webkit-scrollbar { display:none; }
+  .section-label {
+    font-family:'Bebas Neue'; font-size:12px; letter-spacing:3px;
+    color: var(--dim); padding: 18px 20px 8px;
+  }
+  .ex-card {
+    margin: 0 14px 10px;
+    background: var(--ocean);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    overflow: hidden;
+    position:relative;
+  }
+  .ex-card.vela-tag::before {
+    content:'⛵ VELA';
+    position:absolute; top:10px; right:12px;
+    font-size:9px; letter-spacing:2px;
+    color: var(--accent); opacity:.7;
+  }
+  .ex-card.massa-tag::before {
+    content:'💪 MASSA';
+    position:absolute; top:10px; right:12px;
+    font-size:9px; letter-spacing:2px;
+    color: var(--warn); opacity:.7;
+  }
+  .ex-card.active-card {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,201,167,0.15);
+  }
+  .ex-header {
+    display:flex; align-items:center; gap:12px;
+    padding: 14px 16px 10px;
+  }
+  .ex-num {
+    font-family:'Bebas Neue'; font-size:28px;
+    color: rgba(255,255,255,0.12); min-width:32px;
+  }
+  .ex-info { flex:1; }
+  .ex-name {
+    font-size:14px; font-weight:500; color:var(--foam);
+    margin-bottom:3px; padding-right:60px;
+  }
+  .ex-meta { font-size:11px; color:var(--dim); letter-spacing:.5px; }
+  .ex-tip {
+    font-size:11px; color:rgba(0,201,167,0.7);
+    padding: 0 16px 12px; line-height:1.5;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top:4px;
+  }
+  .timer-btn {
+    display:flex; align-items:center; gap:8px;
+    margin: 0 16px 12px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(0,201,167,0.4);
+    background: rgba(0,201,167,0.07);
+    color: var(--accent);
+    font-family:'DM Mono'; font-size:12px; letter-spacing:1px;
+    cursor:pointer; transition:all .2s;
+    width: calc(100% - 32px);
+  }
+  .timer-btn svg { width:16px; height:16px; flex-shrink:0; }
+  .timer-overlay {
+    position:fixed; bottom:0; left:0; right:0;
+    background: linear-gradient(180deg, rgba(10,15,30,0) 0%, var(--navy) 20%);
+    padding: 30px 20px 24px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    transition: opacity .3s, transform .3s;
+    pointer-events:none; opacity:0; transform:translateY(20px);
+  }
+  .timer-overlay.visible {
+    pointer-events:all; opacity:1; transform:translateY(0);
+  }
+  .timer-label {
+    font-family:'Bebas Neue'; font-size:13px; letter-spacing:3px;
+    color:var(--dim);
+  }
+  .timer-ring-wrap {
+    position:relative; width:160px; height:160px;
+  }
+  svg.ring { width:160px; height:160px; transform:rotate(-90deg); }
+  .ring-bg { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:8; }
+  .ring-fill { fill:none; stroke:var(--accent); stroke-width:8; stroke-linecap:round;
+    transition: stroke-dashoffset .9s linear, stroke .3s; }
+  .timer-num {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue'; font-size:52px; letter-spacing:2px; color:var(--foam);
+  }
+  .timer-controls { display:flex; gap:12px; align-items:center; }
+  .t-btn {
+    padding:10px 22px; border-radius:30px;
+    font-family:'DM Mono'; font-size:12px; letter-spacing:1px;
+    cursor:pointer; transition:all .2s; border:none;
+  }
+  .t-cancel { background:rgba(255,255,255,0.07); color:var(--dim); }
+  .t-pause { background:rgba(0,201,167,0.15); color:var(--accent); border:1.5px solid rgba(0,201,167,0.4); }
+  .t-pause.paused { background:rgba(244,162,97,0.15); color:var(--warn); border-color:rgba(244,162,97,0.4); }
+  .warmup-card {
+    margin: 0 14px 8px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius:10px;
+    border: 1px solid rgba(255,255,255,0.05);
+    font-size:13px; color:var(--dim);
+  }
+  .warmup-card strong { color:var(--sail); }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">Vela Gym</div>
+  <div class="day-pills" id="dayPills">
+    <div class="pill active" onclick="selectDay('lun')">LUN</div>
+    <div class="pill" onclick="selectDay('mer')">MER</div>
+    <div class="pill" onclick="selectDay('ven')">VEN</div>
+  </div>
+</div>
+<div class="main" id="main"></div>
+<div class="timer-overlay" id="timerOverlay">
+  <div class="timer-label" id="timerLabel">RECUPERO</div>
+  <div class="timer-ring-wrap">
+    <svg class="ring" viewBox="0 0 160 160">
+      <circle class="ring-bg" cx="80" cy="80" r="68"/>
+      <circle class="ring-fill" id="ringFill" cx="80" cy="80" r="68"/>
+    </svg>
+    <div class="timer-num" id="timerNum">0:00</div>
+  </div>
+  <div class="timer-controls">
+    <button class="t-btn t-cancel" onclick="cancelTimer()">✕ Chiudi</button>
+    <button class="t-btn t-pause" id="pauseBtn" onclick="togglePause()">⏸ Pausa</button>
+  </div>
+</div>
+<script>
+const DATA = {
+  lun: {
+    title: "LUNEDI — Schiena + Bicipiti",
+    warmup: [{ name:"Vogatore (ergometro)", meta:"10 min moderato" }],
+    exercises: [
+      { name:"Stacco da terra", sets:5, reps:"4-6", rest:180, tag:"massa", tip:"Schiena dritta, busto inclinato 45. Spingi il pavimento via da te." },
+      { name:"Trazioni alla sbarra (presa larga)", sets:4, reps:"6-8", rest:120, tag:"vela", tip:"Simula la forza di trazione sulla drizza. Retrai le scapole prima di tirare." },
+      { name:"Pulley basso bilaterale", sets:4, reps:"8-10", rest:90, tag:"vela", tip:"Tira verso l'ombelico, gomiti stretti al busto. Petto aperto." },
+      { name:"Pulley alto - lat pulldown", sets:4, reps:"8-10", rest:90, tag:"vela", tip:"Barra davanti, tira verso il mento. Non iperestendere la schiena." },
+      { name:"Rematore con bilanciere", sets:4, reps:"6-8", rest:120, tag:"massa", tip:"Busto quasi parallelo al suolo, tira verso l'ombelico." },
+      { name:"Curl bilanciere", sets:3, reps:"8-10", rest:90, tag:null, tip:null },
+      { name:"Curl martello con manubri", sets:3, reps:"10-12", rest:60, tag:null, tip:null },
+      { name:"Pulley unilaterale - simula ammainata", sets:3, reps:"12/lato", rest:60, tag:"vela", tip:"Un braccio alla volta, velocita controllata. Come raccogliere una vela." },
+    ]
+  },
+  mer: {
+    title: "MERCOLEDI — Gambe + Core",
+    warmup: [{ name:"Cyclette o tapis roulant", meta:"10 min progressivo" }],
+    exercises: [
+      { name:"Squat con bilanciere", sets:5, reps:"4-6", rest:180, tag:"massa", tip:"Femore parallelo o oltre il parallelo. Ginocchia sui piedi." },
+      { name:"Leg press", sets:4, reps:"8-10", rest:120, tag:null, tip:"Piedi medi-alti per piu glutei. Non bloccare le ginocchia." },
+      { name:"Affondi bulgari con manubri", sets:3, reps:"10/lato", rest:90, tag:null, tip:"Piede posteriore alto. Mantieni il busto eretto." },
+      { name:"Leg curl sdraiato", sets:4, reps:"10-12", rest:90, tag:null, tip:null },
+      { name:"Plank con varianti", sets:3, reps:"45-60 s", rest:60, tag:"vela", tip:"Alterna plank frontale, laterale e con rotazione. Respira." },
+      { name:"Rollout con ruota (ab wheel)", sets:3, reps:"10-12", rest:60, tag:"vela", tip:"Lombare piatta. Vai solo quanto riesci a controllare il ritorno." },
+      { name:"Pallof press al cavo", sets:3, reps:"12/lato", rest:60, tag:"vela", tip:"Resistenza rotazionale: fondamentale per stare stabile sulla barca." },
+      { name:"Polpacci in piedi", sets:4, reps:"15-20", rest:60, tag:null, tip:"Range completo, mantieni 2s in cima." },
+    ]
+  },
+  ven: {
+    title: "VENERDI — Spalle + Petto + Tricipiti",
+    warmup: [{ name:"Rotazioni con elastico - cuffia rotatori", meta:"3x15/lato (OBBLIGATORIO)" }],
+    exercises: [
+      { name:"Panca piana con bilanciere", sets:5, reps:"4-6", rest:180, tag:"massa", tip:"Arco lombare naturale, gomiti a 45-75. Petto pieno." },
+      { name:"Military press con bilanciere", sets:4, reps:"6-8", rest:120, tag:"massa", tip:"Core contratto. Barra passa davanti al mento salendo." },
+      { name:"Alzate laterali con manubri", sets:4, reps:"12-15", rest:60, tag:null, tip:"Lieve inclinazione in avanti. Pollice leggermente sotto." },
+      { name:"Panca inclinata con manubri", sets:3, reps:"8-10", rest:90, tag:null, tip:"30 gradi di inclinazione. Apertura controllata in discesa." },
+      { name:"Face pull al cavo", sets:4, reps:"12-15", rest:60, tag:"vela", tip:"Bilancia tutto il lavoro di trazione del lunedi. Protegge la spalla." },
+      { name:"Dip alle parallele", sets:3, reps:"8-10", rest:90, tag:null, tip:"Busto verticale per piu tricipiti, inclinato per piu petto." },
+      { name:"Pushdown al cavo - tricipiti", sets:3, reps:"10-12", rest:60, tag:null, tip:null },
+    ]
+  }
+};
+let currentDay='lun', timerInterval=null, timerTotal=0, timerLeft=0, isPaused=false;
+const CIRCUM=2*Math.PI*68;
+let audioCtx=null;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function beep(freq,dur,vol){try{const ctx=getAudio();const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=freq;g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);o.start(ctx.currentTime);o.stop(ctx.currentTime+dur);}catch(e){}}
+function beepEnd(){[880,1046,1318].forEach((f,i)=>setTimeout(()=>beep(f,0.18,0.4),i*120));}
+function beepTick(){beep(660,0.07,0.15);}
+function selectDay(day){currentDay=day;document.querySelectorAll('.pill').forEach((p,i)=>{p.classList.toggle('active',['lun','mer','ven'][i]===day);});renderDay();document.getElementById('main').scrollTop=0;cancelTimer();}
+function formatSec(s){if(s>=60)return Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60)+' min';return s+' s';}
+function formatDisplay(s){const m=Math.floor(s/60);const sec=s%60;return m+':'+(sec<10?'0':'')+sec;}
+function renderDay(){
+  const day=DATA[currentDay];
+  const main=document.getElementById('main');
+  let html='<div class="section-label">RISCALDAMENTO</div>';
+  day.warmup.forEach(w=>{html+=`<div class="warmup-card"><strong>${w.name}</strong> — ${w.meta}</div>`;});
+  html+='<div class="section-label">ESERCIZI PRINCIPALI</div>';
+  day.exercises.forEach((ex,i)=>{
+    const tagClass=ex.tag?ex.tag+'-tag':'';
+    const restLabel=formatSec(ex.rest);
+    html+=`<div class="ex-card ${tagClass}" id="card-${i}">
+      <div class="ex-header">
+        <div class="ex-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="ex-info">
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-meta">${ex.sets} serie x ${ex.reps} rip &nbsp;•&nbsp; Recupero ${restLabel}</div>
+        </div>
+      </div>
+      ${ex.tip?`<div class="ex-tip">💡 ${ex.tip}</div>`:''}
+      <button class="timer-btn" onclick="startTimer(${ex.rest},'${ex.name.substring(0,28)}',${i})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        START RECUPERO ${restLabel}
+      </button>
+    </div>`;
+  });
+  main.innerHTML=html;
+}
+function startTimer(seconds,name,cardIdx){
+  cancelTimer();
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();else getAudio();
+  timerTotal=seconds;timerLeft=seconds;isPaused=false;
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active-card'));
+  const card=document.getElementById('card-'+cardIdx);
+  if(card){card.classList.add('active-card');card.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  document.getElementById('timerLabel').textContent=name.toUpperCase();
+  document.getElementById('pauseBtn').textContent='Pausa';
+  document.getElementById('pauseBtn').classList.remove('paused');
+  updateTimerUI();
+  document.getElementById('timerOverlay').classList.add('visible');
+  timerInterval=setInterval(()=>{
+    if(isPaused)return;
+    timerLeft--;updateTimerUI();
+    if(timerLeft<=3&&timerLeft>0)beepTick();
+    if(timerLeft<=0){clearInterval(timerInterval);beepEnd();document.getElementById('timerLabel').textContent='VIA!';setTimeout(cancelTimer,2200);}
+  },1000);
+}
+function updateTimerUI(){
+  document.getElementById('timerNum').textContent=formatDisplay(timerLeft);
+  const pct=timerLeft/timerTotal;
+  const offset=CIRCUM*(1-pct);
+  const ring=document.getElementById('ringFill');
+  ring.style.strokeDasharray=CIRCUM;
+  ring.style.strokeDashoffset=offset;
+  if(pct>0.5)ring.style.stroke='var(--accent)';
+  else if(pct>0.25)ring.style.stroke='var(--warn)';
+  else ring.style.stroke='var(--danger)';
+}
+function togglePause(){isPaused=!isPaused;const btn=document.getElementById('pauseBtn');btn.textContent=isPaused?'Riprendi':'Pausa';btn.classList.toggle('paused',isPaused);}
+function cancelTimer(){clearInterval(timerInterval);timerInterval=null;isPaused=false;document.getElementById('timerOverlay').classList.remove('visible');document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active-card'));}
+renderDay();
+</script>
+</body>
+</html>
